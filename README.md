@@ -71,13 +71,33 @@ open file or a subprocess pipe.
 |----|----------------|
 | `trailing-whitespace` | added line ends with whitespace |
 | `hard-tab` | added line contains a tab character |
-| `line-too-long` | added line is over 100 characters |
+| `line-too-long` | added line is over 100 characters (configurable) |
 | `conflict-marker` | added line looks like `<<<<<<<`, `=======`, or `>>>>>>>` |
+
+## Config file
+
+By default difflint reads `.difflintrc` from the current directory if one
+exists. Point it at a different file with `--config`:
+
+```
+git diff | python -m difflint --config ci/difflint.ini
+```
+
+It's a small INI file under a `[difflint]` section:
+
+```ini
+[difflint]
+max-line-length = 120
+disable = hard-tab, conflict-marker
+```
+
+`disable` is a comma-separated list of rule ids from the table above. An
+unknown rule id in `disable` is an error, not a silent no-op. Without a
+config file, all rules run with `max-line-length = 100`.
 
 ## Status
 
-Early skeleton. No config file support yet, no way to disable individual
-rules, no packaged tests. See the roadmap in the project notes for what's
+No packaged tests yet. See the roadmap in the project notes for what's
 next.
 
 ## Requirements

@@ -29,11 +29,23 @@ def check_trailing_whitespace(added: AddedLine) -> List[Finding]:
     return []
 
 
-def check_line_length(added: AddedLine) -> List[Finding]:
-    if len(added.text) > MAX_LINE_LENGTH:
-        return [Finding(added.path, added.lineno, 'line-too-long',
-                         f'line is {len(added.text)} chars, over {MAX_LINE_LENGTH}')]
-    return []
+def make_line_length_rule(max_length: int = MAX_LINE_LENGTH) -> Callable[[AddedLine], List[Finding]]:
+    """Build a line-length rule bound to `max_length`.
+
+    A factory rather than a single function because the config file lets
+    a caller pick their own limit; `check_line_length` below is just this
+    factory called with the default, kept as a name for anyone importing
+    it directly.
+    """
+    def check_line_length(added: AddedLine) -> List[Finding]:
+        if len(added.text) > max_length:
+            return [Finding(added.path, added.lineno, 'line-too-long',
+                             f'line is {len(added.text)} chars, over {max_length}')]
+        return []
+    return check_line_length
+
+
+check_line_length = make_line_length_rule(MAX_LINE_LENGTH)
 
 
 def check_hard_tab(added: AddedLine) -> List[Finding]:
@@ -50,6 +62,13 @@ def check_conflict_marker(added: AddedLine) -> List[Finding]:
                          'line looks like an unresolved merge conflict marker')]
     return []
 
+
+RULE_IDS = frozenset({
+    'trailing-whitespace',
+    'hard-tab',
+    'line-too-long',
+    'conflict-marker',
+})
 
 DEFAULT_RULES: List[Callable[[AddedLine], List[Finding]]] = [
     check_trailing_whitespace,
