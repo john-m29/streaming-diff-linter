@@ -97,8 +97,11 @@ config file, all rules run with `max-line-length = 100`.
 
 ## Status
 
-No packaged tests yet. See the roadmap in the project notes for what's
-next.
+Run the tests with:
+
+```
+python -m unittest discover
+```
 
 ## Requirements
 
