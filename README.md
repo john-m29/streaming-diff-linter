@@ -50,6 +50,18 @@ plugs into a CI step or a pre-push hook:
 git diff --cached | python -m difflint || echo "fix the above before committing"
 ```
 
+Pass `--format json` to get one JSON object per finding instead, printed as
+it's found rather than collected into a wrapping array:
+
+```
+git diff | python -m difflint --format json
+```
+
+```
+{"path": "src/app.py", "line": 42, "rule_id": "trailing-whitespace", "message": "line has trailing whitespace"}
+{"path": "src/app.py", "line": 57, "rule_id": "line-too-long", "message": "line is 134 chars, over 100"}
+```
+
 ## Using it as a library
 
 ```python
