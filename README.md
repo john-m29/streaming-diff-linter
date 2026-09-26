@@ -9,8 +9,8 @@ editor and `git blame` will show you, not an offset into the patch.
 
 It reads a unified diff (the output of `git diff`, `git show`, or a `.patch`
 file) and runs a small set of checks against every added line: trailing
-whitespace, hard tabs, lines that are too long, and leftover merge conflict
-markers.
+whitespace, hard tabs, lines that are too long, leftover merge conflict
+markers, and blank lines added at the end of a file.
 
 ## Why streaming matters here
 
@@ -85,6 +85,13 @@ open file or a subprocess pipe.
 | `hard-tab` | added line contains a tab character |
 | `line-too-long` | added line is over 100 characters (configurable) |
 | `conflict-marker` | added line looks like `<<<<<<<`, `=======`, or `>>>>>>>` |
+| `trailing-blank-line` | blank line added at the end of the file |
+
+`trailing-blank-line` only fires when the diff itself shows nothing after
+the blank line for that file - a later hunk, a context line, or more added
+content all clear it. On a diff generated with zero lines of context
+(`git diff -U0`), that signal isn't there, so this rule can't tell a real
+end-of-file blank line from one with unchanged content following it.
 
 ## Config file
 

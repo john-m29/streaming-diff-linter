@@ -63,11 +63,22 @@ def check_conflict_marker(added: AddedLine) -> List[Finding]:
     return []
 
 
+def check_trailing_blank_line(added: AddedLine) -> List[Finding]:
+    # Unlike the other rules, `is_trailing_blank` isn't computed from this
+    # line alone - the parser only sets it once it has confirmed no context
+    # line, later hunk, or later file section follows this one.
+    if added.is_trailing_blank:
+        return [Finding(added.path, added.lineno, 'trailing-blank-line',
+                         'blank line added at the end of the file')]
+    return []
+
+
 RULE_IDS = frozenset({
     'trailing-whitespace',
     'hard-tab',
     'line-too-long',
     'conflict-marker',
+    'trailing-blank-line',
 })
 
 DEFAULT_RULES: List[Callable[[AddedLine], List[Finding]]] = [
@@ -75,6 +86,7 @@ DEFAULT_RULES: List[Callable[[AddedLine], List[Finding]]] = [
     check_line_length,
     check_hard_tab,
     check_conflict_marker,
+    check_trailing_blank_line,
 ]
 
 

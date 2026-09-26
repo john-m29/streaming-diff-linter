@@ -39,12 +39,12 @@ class LoadConfigTests(unittest.TestCase):
 
 class BuildRulesTests(unittest.TestCase):
     def test_default_config_builds_all_rules(self):
-        self.assertEqual(len(build_rules(Config())), 4)
+        self.assertEqual(len(build_rules(Config())), 5)
 
     def test_disabled_rules_are_excluded(self):
         config = Config(disabled_rules=frozenset({'hard-tab', 'conflict-marker'}))
         rules = build_rules(config)
-        self.assertEqual(len(rules), 2)
+        self.assertEqual(len(rules), 3)
 
 
 if __name__ == '__main__':

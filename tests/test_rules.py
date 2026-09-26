@@ -6,6 +6,7 @@ from difflint.rules import (
     check_conflict_marker,
     check_hard_tab,
     check_line_length,
+    check_trailing_blank_line,
     check_trailing_whitespace,
     lint,
     make_line_length_rule,
@@ -13,8 +14,8 @@ from difflint.rules import (
 from tests.test_parser import SINGLE_FILE_DIFF
 
 
-def added(text, path='f.py', lineno=1):
-    return AddedLine(path, lineno, text)
+def added(text, path='f.py', lineno=1, is_trailing_blank=False):
+    return AddedLine(path, lineno, text, is_trailing_blank=is_trailing_blank)
 
 
 class TrailingWhitespaceTests(unittest.TestCase):
@@ -71,6 +72,20 @@ class ConflictMarkerTests(unittest.TestCase):
         self.assertEqual(check_conflict_marker(added('a = b == c')), [])
 
 
+class TrailingBlankLineTests(unittest.TestCase):
+    def test_flags_line_marked_trailing_by_the_parser(self):
+        findings = check_trailing_blank_line(added('', is_trailing_blank=True))
+        self.assertEqual([f.rule_id for f in findings], ['trailing-blank-line'])
+
+    def test_ignores_blank_line_not_marked_trailing(self):
+        # A blank added line that the parser has determined is followed by
+        # more file content doesn't get this treatment.
+        self.assertEqual(check_trailing_blank_line(added('')), [])
+
+    def test_ignores_non_blank_line(self):
+        self.assertEqual(check_trailing_blank_line(added('x = 1')), [])
+
+
 class LintTests(unittest.TestCase):
     def test_runs_default_rules_over_a_real_diff(self):
         findings = list(lint(parse_added_lines(SINGLE_FILE_DIFF)))
@@ -85,7 +100,7 @@ class LintTests(unittest.TestCase):
         self.assertEqual([f.rule_id for f in findings], ['hard-tab'])
 
     def test_default_rules_constant_matches_available_rules(self):
-        self.assertEqual(len(DEFAULT_RULES), 4)
+        self.assertEqual(len(DEFAULT_RULES), 5)
 
 
 if __name__ == '__main__':

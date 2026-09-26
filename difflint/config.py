@@ -21,6 +21,7 @@ from .rules import (
     Finding,
     check_conflict_marker,
     check_hard_tab,
+    check_trailing_blank_line,
     check_trailing_whitespace,
     make_line_length_rule,
 )
@@ -69,5 +70,6 @@ def build_rules(config: Config) -> List[Callable[[AddedLine], List[Finding]]]:
         ('line-too-long', make_line_length_rule(config.max_line_length)),
         ('hard-tab', check_hard_tab),
         ('conflict-marker', check_conflict_marker),
+        ('trailing-blank-line', check_trailing_blank_line),
     ]
     return [rule for rule_id, rule in candidates if rule_id not in config.disabled_rules]

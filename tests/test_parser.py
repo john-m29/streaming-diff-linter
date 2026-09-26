@@ -84,5 +84,90 @@ class ParseAddedLinesTests(unittest.TestCase):
         self.assertEqual([(a.path, a.lineno, a.text) for a in added], [('README.md', 1, 'hello')])
 
 
+class TrailingBlankLineDetectionTests(unittest.TestCase):
+    def test_blank_lines_at_end_of_input_are_marked_trailing(self):
+        diff = [
+            'diff --git a/a.txt b/a.txt\n',
+            'index 1111111..2222222 100644\n',
+            '--- a/a.txt\n',
+            '+++ b/a.txt\n',
+            '@@ -3,1 +3,3 @@\n',
+            ' line three\n',
+            '+\n',
+            '+\n',
+        ]
+        added = list(parse_added_lines(diff))
+        self.assertEqual([(a.lineno, a.is_trailing_blank) for a in added], [(4, True), (5, True)])
+
+    def test_blank_lines_followed_by_context_are_not_trailing(self):
+        diff = [
+            'diff --git a/a.txt b/a.txt\n',
+            'index 1111111..2222222 100644\n',
+            '--- a/a.txt\n',
+            '+++ b/a.txt\n',
+            '@@ -3,2 +3,4 @@\n',
+            ' line three\n',
+            '+\n',
+            ' line four\n',
+        ]
+        added = list(parse_added_lines(diff))
+        self.assertEqual([(a.lineno, a.is_trailing_blank) for a in added], [(4, False)])
+
+    def test_blank_lines_followed_by_later_hunk_are_not_trailing(self):
+        diff = [
+            'diff --git a/a.txt b/a.txt\n',
+            'index 1111111..2222222 100644\n',
+            '--- a/a.txt\n',
+            '+++ b/a.txt\n',
+            '@@ -3,1 +3,2 @@\n',
+            ' line three\n',
+            '+\n',
+            '@@ -20,1 +21,1 @@\n',
+            '-old line\n',
+            '+new line\n',
+        ]
+        added = list(parse_added_lines(diff))
+        self.assertEqual(
+            [(a.lineno, a.text, a.is_trailing_blank) for a in added],
+            [(4, '', False), (21, 'new line', False)],
+        )
+
+    def test_blank_lines_followed_by_next_file_are_trailing(self):
+        diff = [
+            'diff --git a/a.txt b/a.txt\n',
+            'index 1111111..2222222 100644\n',
+            '--- a/a.txt\n',
+            '+++ b/a.txt\n',
+            '@@ -3,1 +3,2 @@\n',
+            ' line three\n',
+            '+\n',
+            'diff --git a/b.txt b/b.txt\n',
+            'index 3333333..4444444 100644\n',
+            '--- a/b.txt\n',
+            '+++ b/b.txt\n',
+            '@@ -1,1 +1,1 @@\n',
+            '-old b\n',
+            '+new b\n',
+        ]
+        added = list(parse_added_lines(diff))
+        self.assertEqual(
+            [(a.path, a.lineno, a.is_trailing_blank) for a in added],
+            [('a.txt', 4, True), ('b.txt', 1, False)],
+        )
+
+    def test_blank_line_followed_by_more_added_lines_is_not_trailing(self):
+        diff = [
+            '+++ b/a.txt\n',
+            '@@ -1,0 +1,2 @@\n',
+            '+\n',
+            '+real content\n',
+        ]
+        added = list(parse_added_lines(diff))
+        self.assertEqual(
+            [(a.lineno, a.text, a.is_trailing_blank) for a in added],
+            [(1, '', False), (2, 'real content', False)],
+        )
+
+
 if __name__ == '__main__':
     unittest.main()
